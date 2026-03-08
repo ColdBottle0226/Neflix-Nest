@@ -55,6 +55,7 @@ export class MovieService {
         id: this.idCounter++,
         title: title,
       };
+      
       this.movies.push(newMovie);
       return newMovie;
     }
