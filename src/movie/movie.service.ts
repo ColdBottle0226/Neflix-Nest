@@ -4,9 +4,10 @@ export interface Movie {
   id: number;
   title: string;
 }
-@Injectable() // 주입 어노테이션 필수
-export class AppService {
-    private movies: Movie[] = [
+
+@Injectable()
+export class MovieService {
+  private movies: Movie[] = [
       {
         id: 1,
         title: '해리포터',
@@ -86,5 +87,4 @@ export class AppService {
       const deletedMovie = this.movies.splice(movieIndex, 1);
       return deletedMovie[0];
     } 
-
 }
