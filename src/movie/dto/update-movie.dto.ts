@@ -1,6 +1,6 @@
 import { PartialType } from '@nestjs/mapped-types';
 import { CreateMovieDto } from './create-movie.dto';
-import { Contains, Equals, IsAlphanumeric, IsBoolean, IsDateString, IsDefined, IsDivisibleBy, IsEmpty, IsEnum, IsIn, IsInt, IsNotEmpty, IsNumber, IsOptional, IsPositive, IsString, Max, Min } from 'class-validator';
+import { IsNotEmpty, IsOptional, registerDecorator, Validate, ValidationArguments, ValidationOptions, ValidatorConstraint, ValidatorConstraintInterface } from 'class-validator';
 
 
 enum MovieGenre {
@@ -14,6 +14,41 @@ enum MovieGenre {
 }
 
 /**
+ * 커스텀 Validator
+ */
+@ValidatorConstraint({ name: 'password' })
+class PasswordValidator implements ValidatorConstraintInterface {
+    validate(value: string, args: ValidationArguments): Promise<boolean> | boolean {
+        // 비밀번호 길이는 4-8자
+        return value.length > 4 && value.length < 8;
+    } defaultMessage?(validationArguments?: ValidationArguments): string {
+        return '비밀번호의 길이는 4-8자여야 합니다.';
+    }
+}
+
+/**
+ * 커스텀 데코레이터
+ * @param validationOptions 
+ * @returns 
+ */
+function IsPasswordValid(validationOptions?: ValidationOptions) {
+    return function (object: Object, propertyName: string) {
+        registerDecorator({
+            name: 'isPasswordValid',
+            target: object.constructor,
+            propertyName: propertyName,
+            options: validationOptions,
+            constraints: [],
+            validator: {
+                validate(value: string, args: ValidationArguments): Promise<boolean> | boolean {
+                    return value.length > 4 && value.length < 8;
+                }
+            }
+        })
+    }
+}
+
+/**
  * 영화 업데이트 DTO (Data Transfer Object)
  * 
  * - PartialType: CreateMovieDto의 모든 속성을 선택적으로 만듦
@@ -21,7 +56,7 @@ enum MovieGenre {
  */
 export class UpdateMovieDto extends PartialType(CreateMovieDto) {
     @IsNotEmpty()
-    @IsOptional()
+    @IsOptional() // title을 추가해도 안해도 됨
     title?: string;
 
     @IsNotEmpty()
@@ -52,9 +87,29 @@ export class UpdateMovieDto extends PartialType(CreateMovieDto) {
     // @Min(100)
     // @Max(1000)
 
-    // 문자 검증
-    // @Contains('code comedy')
-    @IsAlphanumeric() // 공백 포함 불가 (ex : code test -> 에러, codeTest -> 통과)
+    //@IsAlphanumeric() // 공백 포함 불가 (ex : code test -> 에러, codeTest -> 통과)
+
+    // 1) null || undefined 에러 던짐
+    // @IsDefined()
+    // @IsOptional()
+
+    // 2) 'code test'만 입력 가능
+    //@Equals('code test')
+
+    // 3) @IsEmpty()
+
+
+    // 4) IsIn(['action', 'comedy'])
+    // 5) @IsIn(['action', 'comedy'])
+
+    // 6) @IsInt()
+
+
+    // 7) 커스텀 validator
+    // @Validate(PasswordValidator, {
+    //     message: '(다른 메시지)비밀번호의 길이는 4-8자여야 합니다.'
+    // })
+    @IsPasswordValid()
     test: string;
 
 
